@@ -1,0 +1,147 @@
+---
+title: "Homework Assignment #4"
+subtitle: "Prioritizing potential aquaculture"
+author: "Carmen Hoyt"
+date: last-modified
+execute: 
+  #eval: false
+  warning: false
+  messages: false
+  #echo: true
+format:
+  html:
+    toc: true
+    code-fold: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Import packages:
+```{r}
+#| code-summary: Expand code
+library(here)
+library(tidyverse)
+library(sf)
+library(tmap)
+library(dplyr)
+library(kableExtra)
+library(terra)
+library(patchwork)
+library(tmaptools)
+```
+
+## Prepare data
+```{r}
+west_coast_eez <- read_sf(here::here("data", "wc_regions_clean.shp"))
+
+bathymetry <- stars::read_stars(here::here("data", "depth.tif"))
+
+bathymetry <- rast(bathymetry)
+
+sst_2008 <- stars::read_stars(here::here("data", "average_annual_sst_2008.tif"))
+sst_2008 <- rast(sst_2008)
+  
+sst_2009 <- stars::read_stars(here::here("data", "average_annual_sst_2009.tif"))
+sst_2009 <- rast(sst_2009)
+
+sst_2010 <- stars::read_stars(here::here("data", "average_annual_sst_2010.tif"))
+sst_2010 <- rast(sst_2010)
+
+sst_2011 <- stars::read_stars(here::here("data", "average_annual_sst_2011.tif"))
+sst_2011 <- rast(sst_2011)
+
+sst_2012 <- stars::read_stars(here::here("data", "average_annual_sst_2012.tif"))
+sst_2012 <- rast(sst_2012)
+
+if (st_crs(west_coast_eez) == st_crs(bathymetry)) {
+  print("The CRS match! Good to go.")
+  } else {
+  warning("The CRS don't match! Don't forget to transform.")
+  bathymetry <- project(bathymetry, crs(west_coast_eez))
+  }
+
+if (st_crs(west_coast_eez) == st_crs(sst_2008)) {
+  print("The CRS match! Good to go.")
+  } else {
+  warning("The CRS don't match! Don't forget to transform.")
+  sst_2008 <- project(sst_2008, crs(west_coast_eez))
+  }
+
+if (st_crs(west_coast_eez) == st_crs(sst_2009)) {
+  print("The CRS match! Good to go.")
+  } else {
+  warning("The CRS don't match! Don't forget to transform.")
+  sst_2009 <- project(sst_2009, crs(west_coast_eez))
+  }
+
+if (st_crs(west_coast_eez) == st_crs(sst_2010)) {
+  print("The CRS match! Good to go.")
+  } else {
+  warning("The CRS don't match! Don't forget to transform.")
+  sst_2010 <- project(sst_2010, crs(west_coast_eez))
+  }
+
+if (st_crs(west_coast_eez) == st_crs(sst_2011)) {
+  print("The CRS match! Good to go.")
+  } else {
+  warning("The CRS don't match! Don't forget to transform.")
+  sst_2011 <- project(sst_2011, crs(west_coast_eez))
+  }
+
+if (st_crs(west_coast_eez) == st_crs(sst_2012)) {
+  print("The CRS match! Good to go.")
+  } else {
+  warning("The CRS don't match! Don't forget to transform.")
+  sst_2012 <- project(sst_2012, crs(west_coast_eez))
+  }
+
+#for (i in seq_along(layers)) {
+ # if (st_crs(west_coast_eez) == st_crs(layers[i])) {
+  #print("The CRS match! Good to go.")
+  #} else {
+  #warning("The CRS don't match! Don't forget to transform.")
+  #new <- st_transform(layers[i], st_crs(west_coast_eez))
+  #assign(new, layers[[i]])
+  #}
+#}
+
+st_crs(west_coast_eez) == st_crs(bathymetry)
+st_crs(west_coast_eez) == st_crs(sst_2008)
+st_crs(west_coast_eez) == st_crs(sst_2009)
+st_crs(west_coast_eez) == st_crs(sst_2010)
+st_crs(west_coast_eez) == st_crs(sst_2011)
+st_crs(west_coast_eez) == st_crs(sst_2012)
+
+plot(west_coast_eez)
+plot(bathymetry)
+plot(sst_2008)
+plot(sst_2009)
+plot(sst_2010)
+plot(sst_2011)
+plot(sst_2012)
+
+# Stack sst rasters
+sst <- c(sst_2008, sst_2009, sst_2010, sst_2011, sst_2012)
+```
+
+```{r}
+# Find mean sst
+avg_sst <- mean(sst, na.rm = TRUE)
+
+plot(avg_sst)
+
+# Conver from K to C
+avg_sst <- avg_sst - 273.15
+
+plot(avg_sst)
+
+# Clip bathymetry to same extent
+depth <- bathymetry[avg_sst, drop = FALSE]
+
+# Resample depth to match SST resolution
+depth_resample <- terra::resample(depth, y = avg_sst, method = "near")
+
+tm_shape(depth_resample) +
+  tm_raster()
+```
+
