@@ -16,7 +16,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-## Import packages:
+## Import packages
 ```{r}
 #| code-summary: Expand code
 library(here)
@@ -76,7 +76,7 @@ stack <- c(sst, depth_resample)
 
 ## Suitability Function:
 
-The function `suitability()` takes the following arguments:
+The function `suitability(species_name, min_temp, max_temp, min_depth, max_depth)` takes the following arguments:
 
 - species_name: the name of the species as a string
 
@@ -88,7 +88,7 @@ The function `suitability()` takes the following arguments:
 
 - max_depth: the absolute value of the deepest depth (meters)
 
-It produces a map of EEZ regions colored by amount of area associated with suitable growing conditions for the species of interest. 
+It produces a map of West Coast EEZ regions colored by amount of area associated with suitable growing conditions for the species of interest. 
 
 ```{r}
 suitability <- function(species_name, min_temp, max_temp, min_depth, max_depth) {
@@ -156,7 +156,7 @@ suitability <- function(species_name, min_temp, max_temp, min_depth, max_depth) 
   # Map suitable region
   suitability_map <- tm_shape(avg_sst) +
     tm_raster(palette = "Greys",
-            title = "Mean SST") +
+            title = "Mean SST (C)") +
   tm_shape(map_df) +
     tm_polygons(title = "EEZ Region",
               col = 'area_rounded',
@@ -177,5 +177,15 @@ suitability <- function(species_name, min_temp, max_temp, min_depth, max_depth) 
 }
 
 suitability("Oyster", 11, 30, 0, 70)
-suitability("Abalone", 8, 18, 0, 24) 
+suitability("Red Abalone", 8, 18, 0, 24) 
 ```
+
+## Data Sources
+
+| Data | Citation | Link |
+|------------------|------------------|------------------|------------------|
+| Species Requirements for Red Abalone | Bisby, F.A., M.A. Ruggiero, K.L. Wilson, M. Cachuela-Palacio, S.W. Kimani, Y.R. Roskov, A. Soulier-Perkins and J. van Hertum. 2005. (via SeaLifeBase) | https://www.sealifebase.ca/summary/Haliotis-rufescens.html |
+| Sea Surface Temperature Data | NOAA Coral Reef Watch. 2018, updated daily. Daily Global 5km Satellite Sea Surface Temperature Anomaly (Version 3.1, released August 1, 2018). College Park, Maryland, USA: NOAA Coral Reef Watch | https://coralreefwatch.noaa.gov/product/vs/data.php | 
+| Bathymetry Data | GEBCO Compilation Group (2024) GEBCO 2024 Grid (doi:10.5285/1c44ce99-0a0d-5f4f-e063-7086abc0ea0f) | https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area |
+| EEZ Boundary | MarineRegions. nd. EEZ Boundaries. | https://www.marineregions.org/eez.php |
+

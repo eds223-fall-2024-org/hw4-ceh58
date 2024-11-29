@@ -81,9 +81,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#import-packages" id="toc-import-packages" class="nav-link active" data-scroll-target="#import-packages">Import packages:</a></li>
+  <li><a href="#import-packages" id="toc-import-packages" class="nav-link active" data-scroll-target="#import-packages">Import packages</a></li>
   <li><a href="#read-in-data" id="toc-read-in-data" class="nav-link" data-scroll-target="#read-in-data">Read in data</a></li>
   <li><a href="#suitability-function" id="toc-suitability-function" class="nav-link" data-scroll-target="#suitability-function">Suitability Function:</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
   </ul>
 </nav>
 </div>
@@ -122,7 +123,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <section id="import-packages" class="level2">
-<h2 class="anchored" data-anchor-id="import-packages">Import packages:</h2>
+<h2 class="anchored" data-anchor-id="import-packages">Import packages</h2>
 <div class="cell">
 <details class="code-fold">
 <summary>Expand code</summary>
@@ -188,7 +189,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="suitability-function" class="level2">
 <h2 class="anchored" data-anchor-id="suitability-function">Suitability Function:</h2>
-<p>The function <code>suitability()</code> takes the following arguments:</p>
+<p>The function <code>suitability(species_name, min_temp, max_temp, min_depth, max_depth)</code> takes the following arguments:</p>
 <ul>
 <li><p>species_name: the name of the species as a string</p></li>
 <li><p>min_temp: minimum sea surface temperature (degrees Celsius)</p></li>
@@ -196,7 +197,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p>min_depth: the absolute value of the shallowest depth (meters)</p></li>
 <li><p>max_depth: the absolute value of the deepest depth (meters)</p></li>
 </ul>
-<p>It produces a map of EEZ regions colored by amount of area associated with suitable growing conditions for the species of interest.</p>
+<p>It produces a map of West Coast EEZ regions colored by amount of area associated with suitable growing conditions for the species of interest.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -265,7 +266,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Map suitable region</span></span>
 <span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>  suitability_map <span class="ot">&lt;-</span> <span class="fu">tm_shape</span>(avg_sst) <span class="sc">+</span></span>
 <span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tm_raster</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>,</span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>            <span class="at">title =</span> <span class="st">"Mean SST"</span>) <span class="sc">+</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>            <span class="at">title =</span> <span class="st">"Mean SST (C)"</span>) <span class="sc">+</span></span>
 <span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tm_shape</span>(map_df) <span class="sc">+</span></span>
 <span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tm_polygons</span>(<span class="at">title =</span> <span class="st">"EEZ Region"</span>,</span>
 <span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>              <span class="at">col =</span> <span class="st">'area_rounded'</span>,</span>
@@ -296,7 +297,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suitability</span>(<span class="st">"Abalone"</span>, <span class="dv">8</span>, <span class="dv">18</span>, <span class="dv">0</span>, <span class="dv">24</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suitability</span>(<span class="st">"Red Abalone"</span>, <span class="dv">8</span>, <span class="dv">18</span>, <span class="dv">0</span>, <span class="dv">24</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -306,6 +307,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+</section>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data Sources</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Data</th>
+<th>Citation</th>
+<th>Link</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Species Requirements for Red Abalone</td>
+<td>Bisby, F.A., M.A.&nbsp;Ruggiero, K.L. Wilson, M. Cachuela-Palacio, S.W. Kimani, Y.R. Roskov, A. Soulier-Perkins and J. van Hertum. 2005. (via SeaLifeBase)</td>
+<td>https://www.sealifebase.ca/summary/Haliotis-rufescens.html</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Sea Surface Temperature Data</td>
+<td>NOAA Coral Reef Watch. 2018, updated daily. Daily Global 5km Satellite Sea Surface Temperature Anomaly (Version 3.1, released August 1, 2018). College Park, Maryland, USA: NOAA Coral Reef Watch</td>
+<td>https://coralreefwatch.noaa.gov/product/vs/data.php</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Bathymetry Data</td>
+<td>GEBCO Compilation Group (2024) GEBCO 2024 Grid (doi:10.5285/1c44ce99-0a0d-5f4f-e063-7086abc0ea0f)</td>
+<td>https://www.gebco.net/data_and_products/gridded_bathymetry_data/#area</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>EEZ Boundary</td>
+<td>MarineRegions. nd. EEZ Boundaries.</td>
+<td>https://www.marineregions.org/eez.php</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
 
 </main>
