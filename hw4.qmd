@@ -32,12 +32,14 @@ library(tmaptools)
 
 ## Prepare data
 ```{r}
+# Read in EEZ data
 west_coast_eez <- read_sf(here::here("data", "wc_regions_clean.shp"))
 
+# Read in and rasterize bathymetry data
 bathymetry <- stars::read_stars(here::here("data", "depth.tif"))
-
 bathymetry <- rast(bathymetry)
 
+# Read in and rasterize sst data
 sst_2008 <- stars::read_stars(here::here("data", "average_annual_sst_2008.tif"))
 sst_2008 <- rast(sst_2008)
   
@@ -53,6 +55,7 @@ sst_2011 <- rast(sst_2011)
 sst_2012 <- stars::read_stars(here::here("data", "average_annual_sst_2012.tif"))
 sst_2012 <- rast(sst_2012)
 
+# Check that CRSs match
 if (st_crs(west_coast_eez) == st_crs(bathymetry)) {
   print("The CRS match! Good to go.")
   } else {
@@ -105,6 +108,7 @@ if (st_crs(west_coast_eez) == st_crs(sst_2012)) {
   #}
 #}
 
+# Confirm CRSs match
 st_crs(west_coast_eez) == st_crs(bathymetry)
 st_crs(west_coast_eez) == st_crs(sst_2008)
 st_crs(west_coast_eez) == st_crs(sst_2009)
@@ -112,36 +116,136 @@ st_crs(west_coast_eez) == st_crs(sst_2010)
 st_crs(west_coast_eez) == st_crs(sst_2011)
 st_crs(west_coast_eez) == st_crs(sst_2012)
 
-plot(west_coast_eez)
-plot(bathymetry)
-plot(sst_2008)
-plot(sst_2009)
-plot(sst_2010)
-plot(sst_2011)
-plot(sst_2012)
+# Visuzalize
+# plot(west_coast_eez)
+# plot(bathymetry)
+# plot(sst_2008)
+# plot(sst_2009)
+# plot(sst_2010)
+# plot(sst_2011)
+# plot(sst_2012)
 
 # Stack sst rasters
 sst <- c(sst_2008, sst_2009, sst_2010, sst_2011, sst_2012)
 ```
 
+## Process data
 ```{r}
 # Find mean sst
 avg_sst <- mean(sst, na.rm = TRUE)
-
 plot(avg_sst)
 
-# Conver from K to C
+# Convert from K to C
 avg_sst <- avg_sst - 273.15
-
 plot(avg_sst)
 
-# Clip bathymetry to same extent
+# Clip bathymetry to same extent as sst
 depth <- bathymetry[avg_sst, drop = FALSE]
 
 # Resample depth to match SST resolution
 depth_resample <- terra::resample(depth, y = avg_sst, method = "near")
 
-tm_shape(depth_resample) +
-  tm_raster()
+# tm_shape(depth_resample) +
+#   tm_raster()
+plot(depth_resample)
+
+stack <- c(sst, depth_resample)
 ```
+
+## Find suitable locations
+```{r}
+# Suitable temperatures
+rcl_sst <- matrix(c(-Inf, 11, 0, # min, max, group
+               11, 30, 1,
+               30, Inf, 0),
+             ncol = 3, byrow = TRUE)
+
+sst_rcl <- terra::classify(avg_sst, rcl = rcl_sst)
+plot(sst_rcl)
+
+# tm_shape(sst_rcl) +
+#   tm_raster()
+
+# Suitable depths
+rcl_depth <- matrix(c(-Inf, -70, 0, # min, max, group
+               -70, 0, 1,
+               0, Inf, 0),
+             ncol = 3, byrow = TRUE)
+
+depth_rcl <- terra::classify(depth_resample, rcl = rcl_depth)
+plot(depth_rcl)
+
+# tm_shape(depth_rcl) +
+#   tm_raster()
+
+# Apply function to sst and depth stack
+fun <- function(x,y){return(x*y)}
+stack <- c(sst_rcl, depth_rcl)
+suitability <- lapp(stack, fun)
+
+# Replace 0 values with NA
+suitability[suitability == 0] <- NA
+plot(suitability)
+
+# tm_shape(suitability) +
+#  tm_raster()
+```
+
+## Determine suitable area size
+```{r}
+# Find suitable area masked to US EEZ extent (raster)
+suitable_raster <-mask(suitability, west_coast_eez)
+plot(suitable_raster)
+
+# Rasterize EEZ
+eez_raster <- rasterize(west_coast_eez, stack, "rgn")
+plot(eez_raster)
+
+# Use cellSize to find the size of each cell in suitability raster
+km_oysters <- cellSize(suitable_raster, unit = "km")
+plot(km_oysters)
+
+# Visualize cell size for the suitability raster
+plot(km_oysters*suitable_raster)
+
+# Create a dataframe for total suitable area for each zone
+oyster_habitat <- data.frame((zonal(km_oysters*suitable_raster, eez_raster, fun ="sum", na.rm = TRUE)))
+
+# Table suitable area by region
+map_eez <- left_join(west_coast_eez, oyster_habitat, by = 'rgn') %>%
+  #st_drop_geometry() %>%
+  select(rgn, area, area_km2) %>%
+  mutate(area_rounded = round(area),
+         Percent = round(area/area_km2*100, 2)) %>%
+  rename(Region = rgn,
+         "Suitable Area (km^2)" = area_rounded,
+         "Total Area (km^2)" = area_km2) %>%
+  mutate(labels = paste0(Region, ": ", "\n", `Suitable Area (km^2)`, " km^2"))
+
+map_eez %>%
+  st_drop_geometry() %>%
+  select('Region', 'Suitable Area (km^2)', 'Total Area (km^2)', 'Percent') %>%
+  kbl() %>%
+  kable_styling()
+
+species_name = "Oyster"
+
+tm_shape(avg_sst) +
+  tm_raster(palette = "Greys",
+            title = "Mean SST") +
+tm_shape(map_eez) +
+  tm_polygons(title = "EEZ Region",
+              col = 'Suitable Area (km^2)',
+              palette = "Purples",
+              legend.show = FALSE) +
+tm_text("labels", size = 1/2) +
+#tm_text("Suitable Area (km^2)", size = 1/4) +
+tm_layout(main.title = paste(species_name, "Aquaculture Suitability"),
+          legend.position = c("right", "top"),
+          bg.color = "white",
+          legend.outside = FALSE) +
+tm_compass(position = c("left", "bottom")) +
+tm_scale_bar(position = c("left", "bottom"))
+```
+
 
