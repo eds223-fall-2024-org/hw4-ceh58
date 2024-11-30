@@ -248,4 +248,19 @@ tm_compass(position = c("left", "bottom")) +
 tm_scale_bar(position = c("left", "bottom"))
 ```
 
+```{r}
+suitability_table <- 
+# Create suitability table
+  suitability_table <- map_df %>%
+  st_drop_geometry() %>%
+  select(rgn, area_rounded, area_km2, Percent) %>%
+  rename(Region = rgn,
+         "Suitable Area (km^2)" = area_rounded,
+         "Total Area (km^2)" = area_km2) %>%
+  kbl() %>%
+  kable_styling()
+  table_name <- paste0(str_replace(species_name, " ", "_"), "_table")
+  assign(table_name, suitability_table)
+```
+
 
